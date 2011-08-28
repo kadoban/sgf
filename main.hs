@@ -8,4 +8,5 @@ main = do c <- getContents
           case parseSGF c of
                 Left e -> do putStrLn "Error parsing input:"
                              print e
-                Right r -> print (advanceWhile (\x -> (moveNum x) < 5) $ start (head r))
+                Right r -> do res <- printOn stCanvas "" "a.sgf" (advanceWhile (\x -> (moveNum x) < 5) $ start (head r))
+                              print res
