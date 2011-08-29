@@ -4,10 +4,9 @@ import qualified Data.Map as M
 import Control.Monad.State
 import Text.Printf
 import Data.List
-import qualified Graphics.GD as G
 import Game
 import SGF
-
+import qualified Graphics.Rendering.Cairo as C
 screenSpace = (150, 150)
 
 data Canvas s c = -- stateType and canvas result type
@@ -44,7 +43,7 @@ printOn c init g =
           markSteps x = foldl' (>>=) (return x) (map (placeMark c) (M.assocs (marks g)))
           finalizeStep = (finalize c)
           bs = size $ board g
-          v  = simpleView (view g) bs
+          v  = simpleView ((view g) ++ (M.keys $ stones $ board g)) bs
 
 simpleView :: [Point] -> Point -> (Point, Point)
 simpleView pps (a, b) =
@@ -57,7 +56,7 @@ simpleView pps (a, b) =
                                        then ((0, 0), (a', b'))
                                        else fixup' $
                                             ((max (lx - margin) 0 , max (ly - margin) 0),
-                                             (min (gx + margin) a', max (gy + margin) b'))
+                                             (min (gx + margin) a', min (gy + margin) b'))
           margin = 2 -- extra space around view
           -- fixup' move view to board edges if it's already close
           -- makes board sized problems look much nicer
@@ -73,7 +72,7 @@ a // b = truncate $ (fromIntegral a) / (fromIntegral b)
 
 pixelMap :: (Point, Point) -> (Integer, Integer) -> ((Point -> Point), Integer)
 pixelMap v scSz =
-    ((\(a, b) -> (a * stoneSize, b * stoneSize)), stoneSize)
+    ((\(a, b) -> ((a - vxl)* stoneSize, (b - vyl) * stoneSize)), stoneSize)
     where stoneSize = min (stoneSize' vxl vxg scSzx) (stoneSize' vyl vyg scSzy)
           stoneSize' l g sz = sz // (g - l + 1)
           ((vxl,vyl), (vxg, vyg)) = v
@@ -112,27 +111,53 @@ jsCanvas = Canvas { setupCanvas = jsSetup
                   , initState = undefined :: ((Point -> Point), Integer)
                   }
 
-convertPoint (a, b) = (fromInteger a, fromInteger b)
-trans = G.rgba 255 0 0 127
+convertPoint (a, b) = (fromIntegral a, fromIntegral b)
 
-imgSetup sz v scSz c =
+drawBoard :: Int -> Int -> (Point, Point) -> Point -> Integer -> C.Render ()
+drawBoard bwp bhp ((lx, ly), (gx, gy)) (bw, bh) ssz =
+    do C.setSourceRGBA 0 0 0 0
+       let (bwp', bhp') = (fromIntegral bwp, fromIntegral bhp)
+       let ssz' = fromIntegral $ ssz // 2
+       let ssz'' = fromIntegral ssz
+       C.rectangle 0 0 bwp' bhp'
+       C.fill
+       C.setSourceRGB 0 0 0
+       C.setAntialias C.AntialiasNone
+       C.setLineWidth 1
+       C.setLineCap C.LineCapButt
+       let lxp = if lx == 0 then ssz' else 0
+       let lyp = if ly == 0 then ssz' else 0
+       let gxp = if gx /= bw - 1 then bwp' else bwp' - ssz'
+       let gyp = if gy /= bh - 1 then bhp' else bhp' - ssz'
+       let xs = map (\x -> C.moveTo x lyp >> C.lineTo x gyp) $
+                map ((+(ssz'+1)).(*ssz'').fromIntegral) [0..(gx-lx)]
+       let ys = map (\y -> C.moveTo lxp y >> C.lineTo gxp y) $
+                map ((+(ssz'+1)).(*ssz'').fromIntegral) [0..(gy-ly)]
+       foldl1 (>>) xs
+       foldl1 (>>) ys
+       C.stroke
+
+drawStone col x y rad =
+    do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
+       C.setAntialias C.AntialiasNone
+       C.setLineWidth 1
+       C.arc (x + rad) (y + rad) (rad) 0 (2 * pi)
+       C.fill
+
+imgSetup sz v scSz _ =
     do let (m, ssz) = pixelMap v scSz
-       let ssz' = fromInteger ssz
-       w <- liftIO $ G.loadPngFile "white_stone.png" >>= G.resizeImage ssz' ssz'
-       b <- liftIO $ G.loadPngFile "black_stone.png" >>= G.resizeImage ssz' ssz'
-       put (convertPoint . m, \x -> if x == White then w else b)
+       put (convertPoint . m, fromIntegral ssz)
        let ((vlx, vly), (vgx, vgy)) = v
-       let boardSz = (fromInteger $ (vgx - vlx + 1) * ssz,
-                      fromInteger $ (vgy - vly + 1) * ssz)
-       board <- liftIO $ G.newImage boardSz
-       liftIO $ G.fillImage trans board
+       let (boardx, boardy) = (fromInteger $ (vgx - vlx + 1) * ssz,
+                               fromInteger $ (vgy - vly + 1) * ssz)
+       board <- liftIO $ C.createImageSurface C.FormatARGB32 boardx boardy
+       liftIO $ C.renderWith board (drawBoard boardx boardy v sz ssz)
        return board
 imgToPlay _ c = return c
 imgPlaceStone (pnt, col) c =
-    do (m, stf) <- get
-       let stImg = stf col
-       sz <- liftIO $ G.imageSize stImg
-       liftIO $ G.copyRegion (0, 0) sz stImg (m pnt) c
+    do (m, ssz) <- get
+       let (x, y) = m pnt
+       liftIO $ C.renderWith c (drawStone col x y (ssz / 2))
        return c
 imgPlaceMark _ c = return c
 imgFinalize c = return c
@@ -141,5 +166,5 @@ imgCanvas = Canvas { setupCanvas = imgSetup
                    , placeStone = imgPlaceStone
                    , placeMark = imgPlaceMark
                    , finalize = imgFinalize
-                   , initState = undefined :: (Point -> G.Point, Color -> G.Image)
+                   , initState = undefined :: (Point -> (Double, Double), Double)
                    }
