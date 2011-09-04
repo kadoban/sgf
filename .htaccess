@@ -1,0 +1,5 @@
+
+<FilesMatch "\.(hs|hi|o)$">
+  order allow,deny
+  deny from all
+</FilesMatch>
