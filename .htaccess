@@ -3,3 +3,7 @@
   order allow,deny
   deny from all
 </FilesMatch>
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^.*$ generate_preview?req=%1 [T=application/x-httpd-cgi,QSA,L]
