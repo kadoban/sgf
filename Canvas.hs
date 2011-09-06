@@ -72,7 +72,7 @@ a // b = truncate $ (fromIntegral a) / (fromIntegral b)
 
 pixelMap :: (Point, Point) -> (Integer, Integer) -> ((Point -> Point), Integer)
 pixelMap v scSz =
-    ((\(a, b) -> ((a - vxl)* stoneSize, (b - vyl) * stoneSize)), stoneSize)
+    ((\(a, b) -> ((a - vxl) * stoneSize, (b - vyl) * stoneSize)), stoneSize)
     where stoneSize = if odd stoneSize' then stoneSize' else stoneSize' - 1
           stoneSize' = min (stoneSize'' vxl vxg scSzx) (stoneSize'' vyl vyg scSzy)
           stoneSize'' l g sz = sz // (g - l + 1)
