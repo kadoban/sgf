@@ -31,10 +31,10 @@ startOfProblem collection = (advanceWhile (\x -> True) $ start (head collection)
 generateOutputs req =
   do sgfC <- liftIO $ sgfContents req
      case sgfC of
-       Nothing -> outputNotFound $ "Source SGF file of " ++ req
+       Nothing -> outputNotFound $ "Source SGF file"
        Just (parsed, (sgfFn, ext)) ->
          case parsed of
-           Left e -> outputError 500 "Can't process that SGF file" ["Cant' process SGF file", req, show e]
+           Left e -> outputError 500 "Can't process that SGF file" ["Can't process SGF file", req, show e]
            Right parsed ->
              do let probStart = startOfProblem parsed
                 img <- liftIO $ printOn imgCanvas undefined probStart
@@ -49,22 +49,20 @@ outputRequestedFile sgfFn ext =
                    outputIt
       ".toplay" -> do setHeader "Content-type" "text/plain"
                       outputIt
-      otherwise -> outputNotFound (sgfFn ++ ext)
+      otherwise -> outputNotFound "Requested generated file"
    where fullName = sgfFn ++ ext
          outputIt = do isIn <- liftIO $ inDirectory "." fullName
                        if isIn
                            then do handle <- liftIO $ openFile fullName ReadMode
                                    bs <- liftIO $ BS.hGetContents handle
                                    outputFPS bs
-                           else outputNotFound fullName
-
-
+                           else outputNotFound "Requested generated file"
 
 cgiMain :: CGI CGIResult
 cgiMain =
   do req <- getInput "req"
      case req of
-       Nothing -> outputError 400 "The request you have made is not valid and should not be attempted again." ["generate_preview called with no req input"]
+       Nothing -> outputError 400 "The request you have made is not valid and should not be attempted again without modifications." ["generate_preview called with no req input"]
        Just req -> generateOutputs req
 
 main = runCGI (handleErrors cgiMain)
