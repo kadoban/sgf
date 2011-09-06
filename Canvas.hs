@@ -137,7 +137,7 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                let lyp = if ly == 0 then toPixely ly else 0.5
                let gxp = if gx /= bw - 1 then bwp + 0.5 else toPixelx gx
                let gyp = if gy /= bh - 1 then bhp + 0.5 else toPixely gy
-               C.setSourceRGB 221 188 107
+               C.setSourceRGB 0.86667 0.73725 0.41960
                C.rectangle lxp lyp gxp gyp
                C.fill -- color board
                C.setSourceRGB 0 0 0
