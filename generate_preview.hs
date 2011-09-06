@@ -9,15 +9,16 @@ import System.Directory
 import System.FilePath
 import Data.Maybe
 import System.IO
+import qualified Data.ByteString.Lazy as BS
 
 sgfDirectory = "/var/www/usgo.org/drupal/sites/default/files/weekly_problem/"
-inSgfDirectory fn =
-  do c <- getDirectoryContents sgfDirectory
+inDirectory dir fn =
+  do c <- getDirectoryContents dir
      return $ fn `elem` (filter (\x -> not $ x `elem` [".", ".."]) c)
 
 sgfContents req =
   do let (sgfFn, ext) = splitExtension req
-     isIn <- inSgfDirectory sgfFn
+     isIn <- inDirectory sgfDirectory sgfFn
      if isIn
        then do h <- openFile (sgfDirectory ++ sgfFn) ReadMode
                c <- hGetContents h
@@ -40,7 +41,24 @@ generateOutputs req =
                 liftIO $ C.surfaceWriteToPNG img (sgfFn ++ ".png")
                 toplay <- liftIO $ printOn toplayCanvas undefined probStart
                 liftIO $ writeFile (sgfFn ++ ".toplay") toplay
-                output "Hello new world!"
+                outputRequestedFile sgfFn ext
+
+outputRequestedFile sgfFn ext =
+  do case ext of
+      ".png" -> do setHeader "Content-type" "image/png"
+                   outputIt
+      ".toplay" -> do setHeader "Content-type" "text/plain"
+                      outputIt
+      otherwise -> outputNotFound (sgfFn ++ ext)
+   where fullName = sgfFn ++ ext
+         outputIt = do isIn <- liftIO $ inDirectory "." fullName
+                       if isIn
+                           then do handle <- liftIO $ openFile fullName ReadMode
+                                   bs <- liftIO $ BS.hGetContents handle
+                                   outputFPS bs
+                           else outputNotFound fullName
+
+
 
 cgiMain :: CGI CGIResult
 cgiMain =
