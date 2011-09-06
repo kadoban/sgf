@@ -7,7 +7,7 @@ import Data.List
 import Game
 import SGF
 import qualified Graphics.Rendering.Cairo as C
-screenSpace = (150, 150)
+screenSpace = (145, 170)
 
 data Canvas s c = -- stateType and canvas result type
     Canvas { setupCanvas :: Point                     -- board size
