@@ -146,11 +146,12 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                foldl1 (>>) ys
                C.stroke
 
-drawStone col x y rad =
+drawStone col pnt (m, ssz) =
     do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
+       let (xp, yp) = m pnt
        C.setAntialias C.AntialiasNone
        C.setLineWidth 1
-       C.arc (x + rad) (y + rad) (rad) 0 (2 * pi)
+       C.arc xp yp (ssz / 2 - 0.5) 0 (2 * pi)
        C.strokePreserve
        C.fill
 
@@ -160,9 +161,8 @@ imgSetup sz v scSz _ =
        return board
 imgToPlay _ c = return c
 imgPlaceStone (pnt, col) c =
-    do (m, ssz) <- get
-       let (x, y) = m pnt
-       liftIO $ C.renderWith c (drawStone col x y (ssz / 2 - 0.5))
+    do st <- get
+       liftIO $ C.renderWith c (drawStone col pnt st)
        return c
 imgPlaceMark _ c = return c
 imgFinalize c = return c
