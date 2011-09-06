@@ -112,29 +112,36 @@ jsCanvas = Canvas { setupCanvas = jsSetup
                   , initState = undefined :: ((Point -> Point), Integer)
                   }
 
-createBoard bwp bhp ((lx, ly), (gx, gy)) (bw, bh) ssz =
-  do board <- C.createImageSurface C.FormatARGB32 bwp bhp
+convertPoint ssz (a, b) = (ssz / 2 + fromIntegral a, ssz / 2 + fromIntegral b)
+
+createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
+  do board <- C.createImageSurface C.FormatARGB32 boardw boardh
      C.renderWith board drawBoard
-     return board
-    where drawBoard =
-            do C.setSourceRGBA 0 0 0 0
-               let (bwp', bhp') = (fromIntegral bwp, fromIntegral bhp)
-               let ssz' = fromIntegral $ ssz // 2
-               let ssz'' = fromIntegral ssz
-               C.rectangle 0 0 bwp' bhp'
+     return (board, \(x, y) -> toPixel x y, ssz')
+    where (boardw, boardh) = (fromInteger $ (gx - lx + 1) * ssz,
+                              fromInteger $ (gy - ly + 1) * ssz)
+          (m, ssz) = pixelMap v scSz
+          ssz' = fromIntegral ssz
+          toPixel x y = convertPoint ssz' $ m (x, y)
+          toPixelx x = fst $ toPixel x undefined
+          toPixely y = snd $ toPixel undefined y
+          drawBoard =
+            do let (bwp, bhp) = (fromIntegral boardw, fromIntegral boardh)
+               C.setSourceRGBA 0 0 0 0
+               C.rectangle 0 0 bwp bhp
                C.fill
                C.setSourceRGB 0 0 0
                C.setAntialias C.AntialiasNone
                C.setLineWidth 1
                C.setLineCap C.LineCapSquare
-               let lxp = if lx == 0 then ssz' else 0.5
-               let lyp = if ly == 0 then ssz' else 0.5
-               let gxp = if gx /= bw - 1 then bwp' else bwp' - ssz'
-               let gyp = if gy /= bh - 1 then bhp' else bhp' - ssz'
+               let lxp = if lx == 0 then toPixelx lx else 0.5
+               let lyp = if ly == 0 then toPixely ly else 0.5
+               let gxp = if gx /= bw - 1 then bwp + 0.5 else toPixelx gx
+               let gyp = if gy /= bh - 1 then bhp + 0.5 else toPixely gy
                let xs = map (\x -> C.moveTo x lyp >> C.lineTo x gyp) $
-                        map ((+(ssz'+1)).(*ssz'').fromIntegral) [0..(gx-lx)]
+                        map toPixelx [lx..gx]
                let ys = map (\y -> C.moveTo lxp y >> C.lineTo gxp y) $
-                        map ((+(ssz'+1)).(*ssz'').fromIntegral) [0..(gy-ly)]
+                        map toPixely [ly..gy]
                foldl1 (>>) xs
                foldl1 (>>) ys
                C.stroke
@@ -147,16 +154,9 @@ drawStone col x y rad =
        C.strokePreserve
        C.fill
 
-convertPoint ssz (a, b) = (ssz / 2 + fromIntegral a, ssz / 2 + fromIntegral b)
-
 imgSetup sz v scSz _ =
-    do let (m, ssz) = pixelMap v scSz
-       let ssz' = fromIntegral ssz
-       put (convertPoint ssz' . m, ssz')
-       let ((vlx, vly), (vgx, vgy)) = v
-       let (boardx, boardy) = (fromInteger $ (vgx - vlx + 1) * ssz,
-                               fromInteger $ (vgy - vly + 1) * ssz)
-       board <- liftIO $ createBoard boardx boardy v sz ssz
+    do (board, pixelMap, ssz) <- liftIO $ createBoard scSz v sz
+       put (pixelMap, ssz)
        return board
 imgToPlay _ c = return c
 imgPlaceStone (pnt, col) c =
