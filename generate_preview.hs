@@ -38,6 +38,8 @@ generateOutputs req =
              do let probStart = startOfProblem parsed
                 img <- liftIO $ printOn imgCanvas undefined probStart
                 liftIO $ C.surfaceWriteToPNG img (sgfFn ++ ".png")
+                toplay <- liftIO $ printOn toplayCanvas undefined probStart
+                liftIO $ writeFile (sgfFn ++ ".toplay") toplay
                 output "Hello new world!"
 
 cgiMain :: CGI CGIResult
