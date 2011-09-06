@@ -79,18 +79,21 @@ pixelMap v scSz =
           ((vxl,vyl), (vxg, vyg)) = v
           (scSzx, scSzy) = scSz
 
-stSetup size view screen c = return $ c ++ show size ++ "\n" ++ show view ++ "\n"
-stToPlay _ c = return c
-stPlaceStone _ c = return c
-stPlaceMark _ c = return c
-stFinalize c = return c
-stCanvas = Canvas { setupCanvas = stSetup
-                  , nextPlayer = stToPlay
-                  , placeStone = stPlaceStone
-                  , placeMark = stPlaceMark
-                  , finalize = stFinalize
-                  , initState = ()
-                  }
+noopSetup _ _ _ = return
+noopToPlay _ = return
+noopPlaceStone _ = return
+noopPlaceMark _ = return
+noopFinalize = return
+noopCanvas = Canvas { setupCanvas = noopSetup
+                    , nextPlayer = noopToPlay
+                    , placeStone = noopPlaceStone
+                    , placeMark = noopPlaceMark
+                    , finalize = noopFinalize
+                    , initState = ()
+                    }
+
+toplayToPlay color _ = return $ show color
+toplayCanvas = noopCanvas{nextPlayer = toplayToPlay}
 
 jsSetup sz v scSz c =
     do put (pixelMap v scSz)
