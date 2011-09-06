@@ -30,7 +30,7 @@ startOfProblem collection = (advanceWhile (\x -> True) $ start (head collection)
 generateOutputs req =
   do sgfC <- liftIO $ sgfContents req
      case sgfC of
-       Nothing -> outputNotFound "Source SGF file"
+       Nothing -> outputNotFound $ "Source SGF file of " ++ req
        Just (parsed, (sgfFn, ext)) ->
          case parsed of
            Left e -> outputError 500 "Can't process that SGF file" ["Cant' process SGF file", req, show e]
