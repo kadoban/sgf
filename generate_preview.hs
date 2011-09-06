@@ -21,23 +21,30 @@ sgfContents req =
      if isIn
        then do h <- openFile (sgfDirectory ++ sgfFn) ReadMode
                c <- hGetContents h
-               return $ Just (parseSGF c, ext)
+               return $ Just (parseSGF c, (sgfFn, ext))
        else return Nothing
 
                             -- for now, just advance to the first branch or end of game
 startOfProblem collection = (advanceWhile (\x -> True) $ start (head collection))
 
+generateOutputs req =
+  do sgfC <- liftIO $ sgfContents req
+     case sgfC of
+       Nothing -> outputNotFound "Source SGF file"
+       Just (parsed, (sgfFn, ext)) ->
+         case parsed of
+           Left e -> outputError 500 "Can't process that SGF file" ["Cant' process SGF file", req, show e]
+           Right parsed ->
+             do let probStart = startOfProblem parsed
+                img <- liftIO $ printOn imgCanvas undefined probStart
+                liftIO $ C.surfaceWriteToPNG img (sgfFn ++ ".png")
+                output "Hello new world!"
+
 cgiMain :: CGI CGIResult
-cgiMain = output "Hello World!"
+cgiMain =
+  do req <- getInput "req"
+     case req of
+       Nothing -> outputError 400 "The request you have made is not valid and should not be attempted again." ["generate_preview called with no req input"]
+       Just req -> generateOutputs req
 
 main = runCGI (handleErrors cgiMain)
-
---main = do c <- getContents
---          case parseSGF c of
---                Left e -> do putStrLn "Error parsing input:"
---                             print e
---                Right r -> do let g = (advanceWhile (\x -> (moveNum x) < 5) $ start (head r))
---                              res <- printOn imgCanvas undefined g
---                              C.surfaceWriteToPNG res "out_test.png"
---                              js <- printOn jsCanvas "" g
---                              print js
