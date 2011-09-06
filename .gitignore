@@ -1,3 +1,6 @@
 *.hi
 *.o
 /generate_preview
+/*.sgf.png
+/*.sgf.toplay
+/*.sgf.js
