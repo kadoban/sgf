@@ -85,8 +85,10 @@ advance game | (nodes $ tree $ game) == [] = game
     where tree' = (tree game) {nodes = ns}
           n:ns = nodes $ tree $ game
 
-advanceWhile f g = last $ g : (drop 1 results)
-    where results = takeWhile f (myIterate g)
+advanceWhile f = result . myIterate
+    where result (a:gss@(b:gs)) | f a = result gss
+                                | otherwise = a
+          result [a] = a
           myIterate g | (nodes $ tree $ g) == [] = [g]
                       | otherwise = g : (myIterate (advance g))
 
