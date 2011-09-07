@@ -7,6 +7,7 @@ import Data.List
 import Game
 import SGF
 import qualified Graphics.Rendering.Cairo as C
+import Data.Ord (comparing)
 screenSpace = (155, 180)
 
 data Canvas s c = -- stateType and canvas result type
@@ -160,10 +161,11 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                C.setLineCap C.LineCapSquare
                foldl1 (>>) $ map drawLinex [lx+1..gx-1]
                foldl1 (>>) $ map drawLiney [ly+1..gy-1]
-               drawLinex lx >> drawLinex gx -- draw these last so they don't get overwritten
-               drawLiney ly >> drawLiney gy -- (in case they're board edges and darker color)
-                                            -- Note: this isn't totally correct yet, need to
-                                            -- draw these in order of board edges last
+               let edges = [(boardEdgex lx, drawLinex lx), -- this is slightly gross,
+                            (boardEdgex gx, drawLinex gx), -- but we need to sort these
+                            (boardEdgey ly, drawLiney ly), -- by if they're an edge or not
+                            (boardEdgey gy, drawLiney gy)] -- and do the edges last
+               foldl1 (>>) $ map snd $ sortBy (comparing fst) edges
 
 drawStone col pnt (m, ssz) =
     do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
