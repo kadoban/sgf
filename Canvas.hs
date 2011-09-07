@@ -142,7 +142,7 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                let gyp = if boardEdgey gy then toPixely gy else bhp + 0.5
                let setupLine edge = if edge
                                          then C.setSourceRGB 0 0 0
-                                         else C.setSourceRGB 0.5 0.5 0.5
+                                         else C.setSourceRGB 0.6 0.6 0.6
                let drawLinex x = do setupLine (boardEdgex x)
                                     let xp = toPixelx x
                                     C.moveTo xp lyp
