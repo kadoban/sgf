@@ -167,7 +167,8 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                let hoshis = filter inView $ hoshiPoints bw bh
                let drawHoshi p = do setupLine False
                                     let (x, y) = toPixel p
-                                    C.arc x y 1 0 (2 * pi)
+                                    let rad = if ssz >= 10 then 2 else 1
+                                    C.arc x y rad 0 (2 * pi)
                                     C.strokePreserve
                                     C.fill
                foldl' (>>) (return ()) $ map drawHoshi hoshis
