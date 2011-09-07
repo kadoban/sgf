@@ -128,28 +128,40 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
           toPixel x y = convertPoint ssz' $ m (x, y)
           toPixelx x = fst $ toPixel x undefined
           toPixely y = snd $ toPixel undefined y
+          boardEdgex x = x == 0 || x == bw - 1
+          boardEdgey y = y == 0 || y == bh - 1
           drawBoard =
             do let (bwp, bhp) = (fromIntegral boardw, fromIntegral boardh)
                C.setSourceRGBA 0 0 0 0
                C.rectangle 0 0 bwp bhp
                C.fill
-               let lxp = if lx == 0 then toPixelx lx else 0.5
-               let lyp = if ly == 0 then toPixely ly else 0.5
-               let gxp = if gx /= bw - 1 then bwp + 0.5 else toPixelx gx
-               let gyp = if gy /= bh - 1 then bhp + 0.5 else toPixely gy
-               C.setSourceRGB 0.86667 0.73725 0.41960
+               let lxp = if boardEdgex lx then toPixelx lx else 0.5
+               let lyp = if boardEdgey ly then toPixely ly else 0.5
+               let gxp = if boardEdgex gx then toPixelx gx else bwp + 0.5
+               let gyp = if boardEdgey gy then toPixely gy else bhp + 0.5
+               let setupLine edge = if edge
+                                         then C.setSourceRGB 0 0 0
+                                         else C.setSourceRGB 0.5 0.5 0.5
+               let drawLinex x = do setupLine (boardEdgex x)
+                                    let xp = toPixelx x
+                                    C.moveTo xp lyp
+                                    C.lineTo xp gyp
+               let drawLiney y = do setupLine (boardEdgey y)
+                                    let yp = toPixely y
+                                    C.moveTo lxp yp
+                                    C.lineTo gxp yp
+               C.setSourceRGB 0.86667 0.73725 0.41960 -- woodish color
                C.rectangle lxp lyp (gxp - lxp) (gyp - lyp)
                C.fill -- color board
-               C.setSourceRGB 0 0 0
                C.setAntialias C.AntialiasNone
                C.setLineWidth 1
                C.setLineCap C.LineCapSquare
-               let xs = map (\x -> C.moveTo x lyp >> C.lineTo x gyp) $
-                        map toPixelx [lx..gx]
-               let ys = map (\y -> C.moveTo lxp y >> C.lineTo gxp y) $
-                        map toPixely [ly..gy]
-               foldl1 (>>) xs
-               foldl1 (>>) ys
+               foldl1 (>>) $ map drawLinex [lx+1..gx-1]
+               foldl1 (>>) $ map drawLiney [ly+1..gy-1]
+               drawLinex lx >> drawLinex gx -- draw these last so they don't get overwritten
+               drawLiney ly >> drawLiney gy -- (in case they're board edges and darker color)
+                                            -- Note: this isn't totally correct yet, need to
+                                            -- draw these in order of board edges last
                C.stroke
 
 drawStone col pnt (m, ssz) =
