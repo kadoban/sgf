@@ -121,14 +121,14 @@ convertPoint ssz (a, b) = (ssz / 2 + fromIntegral a, ssz / 2 + fromIntegral b)
 createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
   do board <- C.createImageSurface C.FormatARGB32 boardw boardh
      C.renderWith board drawBoard
-     return (board, \(x, y) -> toPixel x y, ssz')
+     return (board, toPixel, ssz')
     where (boardw, boardh) = (fromInteger $ (gx - lx + 1) * ssz,
                               fromInteger $ (gy - ly + 1) * ssz)
           (m, ssz) = pixelMap v scSz
           ssz' = fromIntegral ssz
-          toPixel x y = convertPoint ssz' $ m (x, y)
-          toPixelx x = fst $ toPixel x undefined
-          toPixely y = snd $ toPixel undefined y
+          toPixel = convertPoint ssz' . m
+          toPixelx x = fst $ toPixel (x, undefined)
+          toPixely y = snd $ toPixel (undefined, y)
           boardEdgex x = x == 0 || x == bw - 1
           boardEdgey y = y == 0 || y == bh - 1
           drawBoard =
@@ -163,6 +163,27 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                let ylines = map (\y -> (boardEdgey y, drawLiney y)) [ly..gy]
                -- draw the board edges last, so they don't get overwritten
                foldl1 (>>) $ map snd $ sortBy (comparing fst) $ xlines ++ ylines
+               let inView (x, y) = x <= gx && y <= gy && x >= lx && y >= ly
+               let hoshis = filter inView $ hoshiPoints bw bh
+               let drawHoshi p = do setupLine False
+                                    let (x, y) = toPixel p
+                                    C.arc x y 1 0 (2 * pi)
+                                    C.strokePreserve
+                                    C.fill
+               foldl' (>>) (return ()) $ map drawHoshi hoshis
+
+hoshiPoints w h | w /= h = []
+                | w < 3 || w == 4 = []
+                | w == 3 = [(1, 1)]
+                | w == 5 = [(1, 1), (1, 3), (2, 2), (3, 1), (3, 3)]
+                | otherwise = cornerHoshi ++ sideHoshi ++ centerHoshi
+  where (w', h') = (w - 1, h - 1)
+        ledge = if w < 12 then 2 else 3
+        hedge = w' - ledge
+        mid = w // 2
+        cornerHoshi = [(ledge, ledge), (hedge, hedge), (ledge, hedge), (hedge, ledge)]
+        sideHoshi = if odd w && w > 12 then [(ledge, mid), (mid, ledge), (hedge, mid), (mid, hedge)] else []
+        centerHoshi = if odd w then [(mid, mid)] else []
 
 drawStone col pnt (m, ssz) =
     do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
