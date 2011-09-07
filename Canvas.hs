@@ -146,10 +146,12 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                                     let xp = toPixelx x
                                     C.moveTo xp lyp
                                     C.lineTo xp gyp
+                                    C.stroke
                let drawLiney y = do setupLine (boardEdgey y)
                                     let yp = toPixely y
                                     C.moveTo lxp yp
                                     C.lineTo gxp yp
+                                    C.stroke
                C.setSourceRGB 0.86667 0.73725 0.41960 -- woodish color
                C.rectangle lxp lyp (gxp - lxp) (gyp - lyp)
                C.fill -- color board
@@ -162,7 +164,6 @@ createBoard scSz@(scw, sch) v@((lx, ly), (gx, gy)) (bw, bh) =
                drawLiney ly >> drawLiney gy -- (in case they're board edges and darker color)
                                             -- Note: this isn't totally correct yet, need to
                                             -- draw these in order of board edges last
-               C.stroke
 
 drawStone col pnt (m, ssz) =
     do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
