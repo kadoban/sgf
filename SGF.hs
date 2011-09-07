@@ -65,8 +65,8 @@ epointList = (try emptyList) <|> pointList
 labelList = do ps <- many1 (brackets (compose point simpleText))
                return $ sort ps
 color = black <|> white
-    where black = oneOf "bB" >> return Black
-          white = oneOf "wW" >> return White
+    where black = oneOf "bB1" >> return Black
+          white = oneOf "wW2" >> return White
 def = P.LanguageDef{P.commentStart    = "",
                     P.commentEnd      = "",
                     P.commentLine     = "",
