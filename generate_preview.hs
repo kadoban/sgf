@@ -10,6 +10,7 @@ import System.FilePath
 import Data.Maybe
 import System.IO
 import qualified Data.ByteString.Lazy as BS
+import qualified Data.Map as M
 
 sgfDirectory = "/var/www/usgo.org/drupal/sites/default/files/weekly_problem/"
 inDirectory dir fn =
@@ -25,8 +26,8 @@ sgfContents req =
                return $ Just (parseSGF c, (sgfFn, ext))
        else return Nothing
 
-                            -- for now, just advance to the first branch or end of game
-startOfProblem collection = (advanceWhile (\x -> True) $ start (head collection))
+startOfProblem collection = advanceWhile (not . commentAndStones) $ start (head collection)
+    where commentAndStones g = comment g /= "" && (stones $ board g) /= M.fromList []
 
 generateOutputs req =
   do sgfC <- liftIO $ sgfContents req
