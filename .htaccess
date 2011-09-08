@@ -4,6 +4,11 @@
   deny from all
 </FilesMatch>
 
+<Files clear_cached.sh>
+  order allow,deny
+  deny from all
+</Files>
+
 <Files generate_preview>
   SetHandler cgi-script
 </Files>
