@@ -26,7 +26,7 @@ sgfContents req =
                return $ Just (parseSGF c, (sgfFn, ext))
        else return Nothing
 
-startOfProblem collection = advanceWhile (not . commentAndStones) $ start (head collection)
+startOfProblem collection = peekToPlay $ advanceWhile (not . commentAndStones) $ start (head collection)
     where commentAndStones g = comment g /= "" && (stones $ board g) /= M.fromList []
 
 generateOutputs req =

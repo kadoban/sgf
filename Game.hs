@@ -6,7 +6,9 @@ import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Maybe
-import Data.List (foldl')
+import Data.List (foldl',sort,sortBy)
+import qualified Data.List as L
+import Data.Ord (comparing)
 
 data Board = Board { stones    :: Map Point Color
                    , size      :: Point
@@ -23,6 +25,7 @@ data Game = Game { board   :: Board
                  , view    :: [Point]
                  , comment :: String
                  , marks   :: M.Map Point MarkType
+                 , applied :: [Property]
                  }
     deriving (Show, Eq)
 
@@ -33,39 +36,59 @@ start tree = Game {board = empty
                   , view = []
                   , comment = ""
                   , marks = M.empty
+                  , applied = []
                   }
+
+peekToPlay g =
+    if toPlaySet then g else -- if there was a ToPlay, trust it
+         case nextMoves (tree g) of
+           [] -> g
+           ms -> g{toPlay = mostCommonColor ms}
+    where toPlaySet = [] /= filter isToPlay (applied g)
+          isToPlay (ToPlay _) = True
+          isToPlay _          = False
+          mostCommonColor ms = head $ last $ sortBy (comparing length) $ L.group $ sort ms
+          colorMove ns = head $ (dropWhile isNothing (map colorMove' ns)) ++ [Nothing]
+          colorMove' (Move c _) = Just c
+          colorMove' (ToPlay c) = Just c
+          colorMove' _          = Nothing
+          nextMoves gt@(GameTree (n:ns) vss) = case colorMove n of
+                                                 Nothing -> nextMoves (gt{nodes = ns})
+                                                 Just c  -> [c]
+          nextMoves    (GameTree _      vss) = concat $ map nextMoves vss
 
 applyProperty :: Game -> Property -> Game
 applyProperty game prop =
+    let game' = game{applied = prop : (applied game)} in
     case prop of
-        BoardSize sz  -> game{board = f (board game)}
+        BoardSize sz  -> game'{board = f (board game')}
             where f b = b{size = sz}
-        Add c ps      -> game{board = f (board game)}
+        Add c ps      -> game'{board = f (board game')}
             where f b = b{stones = stones'}
                       where stones' = foldl' insStone (stones b) ps
                             insStone = flip (c `ins'`)
                             ins' = flip M.insert
-        Clear ps      -> game{board = f (board game)}
+        Clear ps      -> game'{board = f (board game')}
             where f b = b{stones = stones'}
                       where stones' = foldl' (flip M.delete) (stones b) ps
-        Move c p      -> game{board = f (board game),
-                             moveNum = (+1) (moveNum game),
+        Move c p      -> game'{board = f (board game'),
+                             moveNum = (+1) (moveNum game'),
                              toPlay = other c}
             where f b = b'''
                       where b'   = b{stones = M.insert p c (stones b)}
                             b''  = foldl' captureLifeless b' (neighbors b' p)
                             b''' = captureLifeless b'' p
-        View ps       -> game{view = ps}
-        Comment s     -> game{comment = s}
-        a@(Mark t ps) -> game{marks = f (marks game)}
+        View ps       -> game'{view = ps}
+        Comment s     -> game'{comment = s}
+        a@(Mark t ps) -> game'{marks = f (marks game')}
             where f m = insertMarks m a
-        Labels ps     -> game{marks = f (marks game)}
-            where f m = foldl' insertMarks (marks game) (map toMark ps)
+        Labels ps     -> game'{marks = f (marks game')}
+            where f m = foldl' insertMarks (marks game') (map toMark ps)
                   toMark (p, s) = Mark (L s) [p]
-        ToPlay c      -> game{toPlay = c}
-        Handicap n | n >= 2 && (moveNum game) == 0 -> game {toPlay = White}
-                   | otherwise -> game
-        otherwise     -> game
+        ToPlay c      -> game'{toPlay = c}
+        Handicap n | n >= 2 && (moveNum game') == 0 -> game' {toPlay = White}
+                   | otherwise -> game'
+        otherwise     -> game'
 
 insertMarks :: (M.Map Point MarkType) -> Property -> (M.Map Point MarkType)
 insertMarks m (Mark t ps) = foldl' insM m ps
