@@ -193,8 +193,9 @@ drawStone col pnt (m, ssz) =
        C.setAntialias C.AntialiasNone
        C.setLineWidth 1
        C.arc xp yp (ssz / 2 - 0.5) 0 (2 * pi)
-       C.strokePreserve
-       C.fill
+       C.fillPreserve
+       if ssz > 8 then C.setSourceRGB 0 0 0 else return ()
+       C.stroke
 
 imgSetup sz v scSz _ =
     do (board, pixelMap, ssz) <- liftIO $ createBoard scSz v sz
