@@ -53,7 +53,7 @@ simpleView pps (a, b) =
           minMax ((lx, ly), (gx, gy)) (x, y) = ((min x lx, min y ly), (max x gx, max y gy))
           (a', b') = (a - 1, b - 1)
           -- fixup too small view, including negative view if pps == []
-          fixup ((lx, ly), (gx, gy)) = if (((gx - lx) <= 5 && (gy - ly) <= 5) ||
+          fixup ((lx, ly), (gx, gy)) = if (((gx - lx) < 4 && (gy - ly) < 4) ||
                                            (gx - lx) <= 0 || (gy - ly) <= 0)
                                        then ((0, 0), (a', b'))
                                        else fixup' $
