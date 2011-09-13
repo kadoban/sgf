@@ -206,7 +206,7 @@ drawMark p _ (m, ssz) =
        C.setAntialias C.AntialiasDefault
        C.setLineWidth 1
        C.setSourceRGB 0 0 1
-       C.arc xp yp (ssz / 4) 0 (2 * pi)
+       C.arc xp yp (ssz / 8) 0 (2 * pi)
        C.stroke
 
 imgSetup sz v scSz _ =
