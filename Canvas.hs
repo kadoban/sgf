@@ -201,6 +201,14 @@ drawStone col pnt (m, ssz) =
        if ssz > 6 then C.setSourceRGB 0 0 0 else return ()
        C.stroke
 
+drawMark p _ (m, ssz) =
+    do let (xp, yp) = m p
+       C.setAntialias C.AntialiasDefault
+       C.setLineWidth 1
+       C.setSourceRGB 0 0 1
+       C.arc xp yp (ssz / 4) 0 (2 * pi)
+       C.stroke
+
 imgSetup sz v scSz _ =
     do (board, pixelMap, ssz) <- liftIO $ createBoard scSz v sz
        put (pixelMap, ssz)
@@ -210,7 +218,10 @@ imgPlaceStone (pnt, col) c =
     do st <- get
        liftIO $ C.renderWith c (drawStone col pnt st)
        return c
-imgPlaceMark _ c = return c
+imgPlaceMark (p, mrk) c =
+    do st <- get
+       liftIO $ C.renderWith c (drawMark p mrk st)
+       return c
 imgFinalize c = return c
 imgCanvas = Canvas { setupCanvas = imgSetup
                    , nextPlayer = imgToPlay
