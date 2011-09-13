@@ -194,7 +194,7 @@ hoshiPoints w h | w /= h = []
 drawStone col pnt (m, ssz) =
     do if col == Black then C.setSourceRGB 0 0 0 else C.setSourceRGB 1 1 1
        let (xp, yp) = m pnt
-       C.setAntialias C.AntialiasNone
+       C.setAntialias C.AntialiasDefault
        C.setLineWidth 1
        C.arc xp yp (ssz / 2 - 0.5) 0 (2 * pi)
        C.fillPreserve
