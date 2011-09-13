@@ -204,9 +204,10 @@ drawStone col pnt (m, ssz) =
 drawMark p _ (m, ssz) =
     do let (xp, yp) = m p
        C.setAntialias C.AntialiasDefault
-       C.setLineWidth 1
+       C.setLineWidth (if ssz > 14 then 2 else 1)
        C.setSourceRGB 1 0 0
-       C.arc xp yp (ssz / 8) 0 (2 * pi)
+       let drawSize = if ssz < 8 then 0.5 else ssz / 6
+       C.arc xp yp drawSize 0 (2 * pi)
        C.stroke
 
 imgSetup sz v scSz _ =
