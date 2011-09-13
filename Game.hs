@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Game where
 
 import SGF
@@ -38,6 +40,16 @@ start tree = Game {board = empty
                   , marks = M.empty
                   , applied = []
                   }
+
+flipBoard g@Game{board, view, marks} = g{ board = board { size = swap size
+                                                        , stones = swapKeys stones
+                                                        }
+                                        , view = map swap view
+                                        , marks = swapKeys marks
+                                        }
+    where Board{stones, size} = board
+          swap (a, b) = (b, a)
+          swapKeys = M.mapKeys swap
 
 peekToPlay g =
     if toPlaySet then g else -- if there was a ToPlay, trust it

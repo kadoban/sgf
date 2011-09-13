@@ -31,20 +31,23 @@ data Canvas s c = -- stateType and canvas result type
            }
 
 printOn :: Canvas s a -> a -> Game -> IO a
-printOn c init g =
+printOn c init g' =
     do (a, s) <- runStateT (setupStep
                         >>= nextPlayerStep
                         >>= stoneSteps
                         >>= markSteps
                         >>= finalizeStep) (initState c)
        return a
-    where setupStep = (setupCanvas c) bs v screenSpace init
+    where setupStep = (setupCanvas c) (bs g) (v g) screenSpace init
           nextPlayerStep = (nextPlayer c) (toPlay g)
           stoneSteps x = foldl' (>>=) (return x) (map (placeStone c) (M.assocs (stones $ board g)))
           markSteps x = foldl' (>>=) (return x) (map (placeMark c) (M.assocs (marks g)))
           finalizeStep = (finalize c)
-          bs = size $ board g
-          v  = simpleView ((view g) ++ (M.keys $ stones $ board g)) bs
+          bs g = size $ board g
+          v g = simpleView ((view g) ++ (M.keys $ stones $ board g)) (bs g)
+          resultingStoneSize g = snd $ pixelMap (v g) screenSpace
+          g = maxBy resultingStoneSize g' (flipBoard g')
+          maxBy f a b = if f a < f b then b else a
 
 simpleView :: [Point] -> Point -> (Point, Point)
 simpleView pps (a, b) =
