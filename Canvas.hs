@@ -44,7 +44,8 @@ printOn c init g' =
           markSteps x = foldl' (>>=) (return x) (map (placeMark c) (M.assocs (marks g)))
           finalizeStep = (finalize c)
           bs g = size $ board g
-          v g = simpleView ((view g) ++ (M.keys $ stones $ board g)) (bs g)
+          v g = simpleView ((M.keys $ stones $ board g) ++ (M.keys $ marks g) ++ (view g))
+                           (bs g)
           resultingStoneSize g = snd $ pixelMap (v g) screenSpace
           g = maxBy resultingStoneSize g' (flipBoard g')
           maxBy f a b = if f a < f b then b else a
