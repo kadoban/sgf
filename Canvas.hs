@@ -205,7 +205,7 @@ drawMark p _ (m, ssz) =
     do let (xp, yp) = m p
        C.setAntialias C.AntialiasDefault
        C.setLineWidth 1
-       C.setSourceRGB 0 0 1
+       C.setSourceRGB 1 0 0
        C.arc xp yp (ssz / 8) 0 (2 * pi)
        C.stroke
 
