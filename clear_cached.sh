@@ -1,4 +1,6 @@
 #!/bin/bash
-
-rm -f *.sgf.png
-rm -f *.sgf.toplay
+shopt -s extglob
+# Absolute path to this script
+SCRIPT=`readlink -f $0`
+SCRIPTPATH=`dirname $SCRIPT`
+cd $SCRIPTPATH && rm -f *.sgf.@(png|toplay)
