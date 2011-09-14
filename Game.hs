@@ -132,7 +132,7 @@ onBoard board point = px >= 0 && py >= 0 && px < bx && py < by
 
 neighbors board point = filter (onBoard board) possible
     where possible = [(x, y) | x <- [px - 1, px + 1],
-                                  y <- [py - 1, py + 1]]
+                               y <- [py - 1, py + 1]]
           px = fst point
           py = snd point
 
