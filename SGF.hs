@@ -7,6 +7,7 @@ module SGF (Property(..),
             parseSGF) where
 
 import Text.Parsec
+import Text.Parsec.Error
 import qualified Text.Parsec.Token as P
 import Data.Maybe
 import Data.List
@@ -173,10 +174,5 @@ text = do ss <- many textChar
 simpleText = do ss <- many simpleTextChar
                 return (concat ss)
 
+parseSGF :: String -> Either Text.Parsec.Error.ParseError [GameTree]
 parseSGF input = parse collection "(unknown)" input
-
-blah = do c <- getContents
-          case parseSGF c of
-                Left e -> do putStrLn "Error parsing input:"
-                             print e
-                Right r -> print r
