@@ -35,3 +35,10 @@ Not terribly user friendly, but you should be able to figure it out.
 This project is copyrighted 2011 by Joshua Simmons.  It is available
 under the [AGPLv3 license](http://www.gnu.org/licenses/agpl.html)
 which is included in text form in the LICENSE file
+
+# Disclaimer
+
+This work comes with no warranty of any kind, to the extent allowed by
+law.  It was written with security in mind, but you should do your own
+security audit on this code before using it in any way.  Anything that
+goes wrong, in any way, is your responsibility, not mine.
