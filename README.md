@@ -29,3 +29,9 @@ generating the file if it does not already exist, or serving the
 cached copy if it is there.
 
 Not terribly user friendly, but you should be able to figure it out.
+
+# License
+
+This project is copyrighted 2011 by Joshua Simmons.  It is available
+under the [AGPLv3 license](http://www.gnu.org/licenses/agpl.html)
+which is included in text form in the LICENSE file
