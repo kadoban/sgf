@@ -11,8 +11,8 @@ import Data.Maybe
 import System.IO
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as M
+import Config
 
-sgfDirectory = "/var/www/usgo.org/drupal/sites/default/files/weekly_problem/"
 inDirectory dir fn =
   do c <- getDirectoryContents dir
      return $ fn `elem` (filter (\x -> not $ x `elem` [".", ".."]) c)
