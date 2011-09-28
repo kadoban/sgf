@@ -1,3 +1,4 @@
+-- Copyright 2011 by Joshua Simmons <joshua.simmons@emptypath.com>
 module Main where
 
 import SGF

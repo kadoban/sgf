@@ -1,3 +1,4 @@
+-- Copyright 2011 by Joshua Simmons <joshua.simmons@emptypath.com>
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Game where
