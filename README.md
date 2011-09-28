@@ -23,7 +23,7 @@ in the directory also.  Finding the right libraries should not be all
 that hard, but feel free to contact me if you need help.
 
 Then, all you need to do is put SGF files in the sgfDirectory, and
-<img> or link tags in your html content that point to the generated
+\<img> or link tags in your html content that point to the generated
 files.  The htaccess rewrite rule should handle automatically
 generating the file if it does not already exist, or serving the
 cached copy if it is there.
